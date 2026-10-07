@@ -190,7 +190,7 @@ def call(c):
 
 def main():
     cases=[]
-    urls = ["https://celebrity.astrosage.com/amitabh-bachchan-birth-chart.asp"] if "--one" in sys.argv else URLS
+    urls = ["https://celebrity.astrosage.com/sachin-tendulkar-birth-chart.asp"] if "--one" in sys.argv else URLS
     label = "1 known chart" if "--one" in sys.argv else "20 published charts"
     print(f"AstroLaab vs AstroSage — {label}")
     print("="*72)
