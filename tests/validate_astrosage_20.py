@@ -155,24 +155,24 @@ def parse_page(url):
                 # fall back to the row's known Nakshatra/Pada value types.
                 moon_nak = cells[idx["nakshatra"]].strip() or None
                 moon_pada = cells[idx["pada"]].strip() or None
-                if not moon_nak:
-                    nak_names = {
+                row_text = tr.get_text(" ", strip=True)
+                nak_names = {
                         "Ashvini","Bharani","Krittika","Rohini","Mrigasira",
                         "Ardra","Punarvasu","Pushya","Ashlesha","Magha",
                         "Purva Phalguni","Uttara Phalguni","Hasta","Chitra",
                         "Swati","Vishakha","Anuradha","Jyeshtha","Mula",
                         "Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta",
                         "Satabhisa","Purva Bhadrapada","Uttara Bhadrapada","Revati",
-                    }
-                    for value in cells:
-                        if value.strip() in nak_names:
-                            moon_nak = value.strip()
+                }
+                if not moon_nak:
+                    for nak in sorted(nak_names, key=len, reverse=True):
+                        if nak.lower() in row_text.lower():
+                            moon_nak = nak
                             break
                 if not moon_pada:
-                    for value in cells:
-                        if value.strip() in {"1","2","3","4"}:
-                            moon_pada = value.strip()
-                            break
+                    mp = re.search(r"\b([1-4])\b\s*(?:$|\s)", row_text)
+                    if mp:
+                        moon_pada = mp.group(1)
         except (ValueError, IndexError, KeyError):
             continue
 
