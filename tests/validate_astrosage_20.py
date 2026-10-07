@@ -150,23 +150,10 @@ def parse_page(url):
 
             if key == "Moon":
                 moon_sign = sign
-                # AstroSage's Moon row is structurally:
-                # Moon | C | R | Rashi | Longitude | Nakshatra | Pada | Relation
-                # Extract Nakshatra/Pada from the rendered row text itself so
-                # blank/icon cells cannot shift the metadata columns.
-                row_text = tr.get_text(" ", strip=True)
-                row_norm = re.sub(r"\s+", " ", row_text).strip()
-                moon_match = re.search(
-                    r"\bMoon\\b.*?\\b(Aries|Taurus|Gemini|Cancer|Leo|Virgo|Libra|Scorpio|Scorpion|Sagittarius|Capricorn|Aquarius|Pisces)\\b"
-                    r".*?\\b\\d{1,2}-\\d{2}-\\d{2}\\b"
-                    r".*?\\b(Purva Ashadha|Uttara Ashadha|Ashvini|Bharani|Krittika|Rohini|Mrigasira|Ardra|Punarvasu|Pushya|Ashlesha|Magha|Purva Phalguni|Uttara Phalguni|Hasta|Chitra|Swati|Vishakha|Anuradha|Jyeshtha|Mula|Shravana|Dhanishta|Satabhisa|Purva Bhadrapada|Uttara Bhadrapada|Revati)\\b"
-                    r".*?\\b([1-4])\\b",
-                    row_norm,
-                    re.I,
-                )
-                if moon_match:
-                    moon_nak = moon_match.group(2)
-                    moon_pada = moon_match.group(3)
+                # Read Nakshatra/Pada directly from the header-derived columns.
+                # This avoids regex/HTML whitespace ambiguity.
+                moon_nak = cells[idx["nakshatra"]].strip() or None
+                moon_pada = cells[idx["pada"]].strip() or None
 
         except (ValueError, IndexError, KeyError):
             continue
