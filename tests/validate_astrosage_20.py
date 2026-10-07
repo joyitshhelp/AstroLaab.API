@@ -209,6 +209,10 @@ def main():
     maxerr=0.0
     for i,c in enumerate(cases,1):
         try:
+            if "--one" in sys.argv:
+                print(f"AstroSage inputs: {c['name']} | {c['date']} {c['time']} | lat={c['latitude']:.6f} lon={c['longitude']:.6f} tz={c['timezone_offset']}")
+                print("AstroSage Moon:", c["moon_sign"], c["moon_nakshatra"], "pada", c["moon_pada"])
+                print("AstroSage longitudes:", {k: round(c["expected"][k], 8) for k in ("Asc", *PLANETS) if k in c["expected"]})
             status, body=call(c)
             if status != 200: raise RuntimeError(f"HTTP {status}: {body}")
             failures=[]
