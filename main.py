@@ -165,6 +165,7 @@ class ChartRequest(BaseModel):
     day: int = Field(..., ge=1, le=31)
     hour: int = Field(..., ge=0, le=23)
     minute: int = Field(..., ge=0, le=59)
+    second: int = Field(0, ge=0, le=59)
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
     chart_style: str = Field("north", pattern="^(north|south)$")
@@ -178,7 +179,7 @@ class ChartRequest(BaseModel):
     @model_validator(mode="after")
     def validate_calendar_date(self):
         try:
-            datetime(self.year, self.month, self.day, self.hour, self.minute)
+            datetime(self.year, self.month, self.day, self.hour, self.minute, self.second)
         except ValueError as exc:
             raise ValueError("invalid calendar date/time") from exc
         return self
@@ -210,7 +211,7 @@ def generate_chart(
     # Resolve local time first so bad input is a clean 422, not a 500.
     try:
         local_dt, utc_dt, time_warnings = resolve_local_time(
-            payload.year, payload.month, payload.day, payload.hour, payload.minute,
+            payload.year, payload.month, payload.day, payload.hour, payload.minute, payload.second,
             payload.timezone, payload.utc_offset_minutes,
         )
     except TimeInputError as exc:
