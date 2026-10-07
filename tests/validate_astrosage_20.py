@@ -113,7 +113,7 @@ def parse_page(url):
         for tr in rows:
             cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th","td"])]
             if len(cells) >= 6 and cells[0].strip() == "Moon":
-                moon_sign, moon_nak, moon_pada = cells[3-1], cells[4], cells[5]
+                moon_sign, moon_nak, moon_pada = cells[3], cells[5], cells[6]
                 break
 
     return {
