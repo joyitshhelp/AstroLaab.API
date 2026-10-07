@@ -188,9 +188,11 @@ def call(c):
 
 def main():
     cases=[]
-    print("AstroLaab vs AstroSage — 20 published charts")
+    urls = ["https://celebrity.astrosage.com/amitabh-bachchan-birth-chart.asp"] if "--one" in sys.argv else URLS
+    label = "1 known chart" if "--one" in sys.argv else "20 published charts"
+    print(f"AstroLaab vs AstroSage — {label}")
     print("="*72)
-    for u in URLS:
+    for u in urls:
         try:
             c=parse_page(u)
             if not (1950 <= int(c["date"][:4]) <= 2050):
@@ -199,8 +201,8 @@ def main():
             print(f"loaded {c['name']}: {c['date']} {c['time']} {c['latitude']:.4f},{c['longitude']:.4f}")
         except Exception as e:
             print(f"LOAD FAIL {u}: {e}")
-    print(f"Loaded {len(cases)}/{len(URLS)} cases")
-    if len(cases) != len(URLS):
+    print(f"Loaded {len(cases)}/{len(urls)} cases")
+    if len(cases) != len(urls):
         return 2
 
     passed=failed=0
