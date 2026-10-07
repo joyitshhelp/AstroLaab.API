@@ -150,8 +150,29 @@ def parse_page(url):
 
             if key == "Moon":
                 moon_sign = sign
+                # Some AstroSage HTML variants expose blank/header cells in
+                # the rendered row. Prefer the header-derived columns, then
+                # fall back to the row's known Nakshatra/Pada value types.
                 moon_nak = cells[idx["nakshatra"]].strip() or None
                 moon_pada = cells[idx["pada"]].strip() or None
+                if not moon_nak:
+                    nak_names = {
+                        "Ashvini","Bharani","Krittika","Rohini","Mrigasira",
+                        "Ardra","Punarvasu","Pushya","Ashlesha","Magha",
+                        "Purva Phalguni","Uttara Phalguni","Hasta","Chitra",
+                        "Swati","Vishakha","Anuradha","Jyeshtha","Mula",
+                        "Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta",
+                        "Satabhisa","Purva Bhadrapada","Uttara Bhadrapada","Revati",
+                    }
+                    for value in cells:
+                        if value.strip() in nak_names:
+                            moon_nak = value.strip()
+                            break
+                if not moon_pada:
+                    for value in cells:
+                        if value.strip() in {"1","2","3","4"}:
+                            moon_pada = value.strip()
+                            break
         except (ValueError, IndexError, KeyError):
             continue
 
