@@ -121,7 +121,7 @@ def parse_page(url):
 
     for tr in rows:
         cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
-        normalized = [re.sub(r"\\s+", " ", x).strip().lower() for x in cells]
+        normalized = [re.sub(r"\s+", " ", x).strip().lower() for x in cells]
 
         if not planet_table_found:
             if "planets" in normalized and "rashi" in normalized and "longitude" in normalized and "nakshatra" in normalized and "pada" in normalized:
