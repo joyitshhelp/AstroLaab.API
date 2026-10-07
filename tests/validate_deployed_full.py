@@ -37,7 +37,8 @@ import swisseph as swe
 URL = os.environ.get("ASTROLAAB_API_URL")
 KEY = os.environ.get("ASTROLAAB_API_KEY")
 TIMEOUT = float(os.environ.get("ASTROLAAB_TIMEOUT", "30"))
-RETRIES = max(1, int(os.environ.get("ASTROLAAB_RETRIES", "2")))
+RETRIES = max(1, int(os.environ.get("ASTROLAAB_RETRIES", "3")))
+MIN_INTERVAL = max(0.0, float(os.environ.get("ASTROLAAB_MIN_INTERVAL", "3.2")))
 DEFAULT_CASES = Path("workers/moon-sign/tests/independent-accuracy-cases.json")
 
 PLANETS = {
@@ -184,6 +185,7 @@ def post_chart(case: dict, chart_style: str = "north") -> tuple[int, dict | None
         "day": int(case["date"][8:10]),
         "hour": int(case["time"][0:2]),
         "minute": int(case["time"][3:5]),
+        "second": int(case["time"][6:8]) if len(case["time"]) >= 8 else 0,
         "latitude": float(case["place"]["latitude"]),
         "longitude": float(case["place"]["longitude"]),
         "chart_style": chart_style,
@@ -210,6 +212,14 @@ def post_chart(case: dict, chart_style: str = "north") -> tuple[int, dict | None
             last_error = f"HTTP {exc.code}: {detail[:500]}"
             if exc.code in (401, 403, 422):
                 break
+            if exc.code == 429:
+                retry_after = exc.headers.get("Retry-After")
+                try:
+                    wait = max(3.2, float(retry_after)) if retry_after else 60.0
+                except ValueError:
+                    wait = 60.0
+                time.sleep(wait + 0.2)
+                continue
         except Exception as exc:
             last_error = repr(exc)
         if attempt < RETRIES:
@@ -398,6 +408,8 @@ def validate_case(case: dict, body: dict, ref: dict) -> tuple[list[str], dict[st
 
 def run_case(case: dict) -> tuple[bool, dict[str, float], str]:
     ref = reference(case)
+    if MIN_INTERVAL:
+        time.sleep(MIN_INTERVAL)
     status, body, error = post_chart(case)
     if body is None:
         return False, {}, f"HTTP failure: {error or status}"
