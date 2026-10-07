@@ -14,7 +14,7 @@ def _offset_minutes(dt: datetime) -> float:
     return dt.utcoffset().total_seconds() / 60.0
 
 
-def resolve_local_time(year, month, day, hour, minute, second=0, tz_name="Asia/Kolkata", utc_offset_minutes=None):
+def resolve_local_time(year, month, day, hour, minute, tz_name="Asia/Kolkata", utc_offset_minutes=None, second=0):
     """Return (local_dt, utc_dt, warnings).
 
     - The supported range is judged on the LOCAL calendar year.
