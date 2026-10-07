@@ -14,7 +14,7 @@ def _offset_minutes(dt: datetime) -> float:
     return dt.utcoffset().total_seconds() / 60.0
 
 
-def resolve_local_time(year, month, day, hour, minute, tz_name="Asia/Kolkata", utc_offset_minutes=None):
+def resolve_local_time(year, month, day, hour, minute, second=0, tz_name="Asia/Kolkata", utc_offset_minutes=None):
     """Return (local_dt, utc_dt, warnings).
 
     - The supported range is judged on the LOCAL calendar year.
@@ -27,7 +27,7 @@ def resolve_local_time(year, month, day, hour, minute, tz_name="Asia/Kolkata", u
     if not (SUPPORTED_MIN_YEAR <= year <= SUPPORTED_MAX_YEAR):
         raise TimeInputError(f"birth year outside supported range {SUPPORTED_MIN_YEAR}-{SUPPORTED_MAX_YEAR}")
     try:
-        naive = datetime(year, month, day, hour, minute)
+        naive = datetime(year, month, day, hour, minute, second)
     except ValueError as exc:
         raise TimeInputError("invalid calendar date/time") from exc
     try:
