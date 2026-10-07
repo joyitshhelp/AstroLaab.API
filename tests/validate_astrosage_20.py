@@ -118,6 +118,7 @@ def parse_page(url):
     moon_sign = moon_nak = moon_pada = None
     rows = soup.find_all("tr")
     planet_table_found = False
+    table_idx = None
 
     for tr in rows:
         cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
@@ -126,6 +127,7 @@ def parse_page(url):
         if not planet_table_found:
             if "planets" in normalized and "rashi" in normalized and "longitude" in normalized and "nakshatra" in normalized and "pada" in normalized:
                 planet_table_found = True
+                table_idx = {name: normalized.index(name) for name in ("rashi", "longitude", "nakshatra", "pada")}
             continue
 
         if not cells:
@@ -140,7 +142,7 @@ def parse_page(url):
 
         try:
             # Header-derived indexes, rather than fixed cell positions.
-            idx = {name: normalized.index(name) for name in ("rashi", "longitude", "nakshatra", "pada")}
+            idx = table_idx
             sign = cells[idx["rashi"]].strip()
             sign = {"Scorpion": "Scorpio"}.get(sign, sign)
             sign_index = SIGNS.index(sign)
