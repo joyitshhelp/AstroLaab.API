@@ -211,8 +211,8 @@ def generate_chart(
     # Resolve local time first so bad input is a clean 422, not a 500.
     try:
         local_dt, utc_dt, time_warnings = resolve_local_time(
-            payload.year, payload.month, payload.day, payload.hour, payload.minute, payload.second,
-            payload.timezone, payload.utc_offset_minutes,
+            payload.year, payload.month, payload.day, payload.hour, payload.minute,
+            payload.timezone, payload.utc_offset_minutes, second=payload.second,
         )
     except TimeInputError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
