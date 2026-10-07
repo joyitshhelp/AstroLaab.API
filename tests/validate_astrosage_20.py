@@ -92,7 +92,7 @@ def parse_page(url):
         raise ValueError("birth-data section not found")
     section = text[start:]
     def section_field(label):
-        m = re.search(rf"{re.escape(label)}:\\s*(.*?)\\s*(?=Date of Birth:|Time of Birth:|Place of Birth:|Longitude:|Latitude:|Time Zone:|Information Source:|$)", section, re.S)
+        m = re.search(rf"{re.escape(label)}:\s*(.*?)\s*(?=Date of Birth:|Time of Birth:|Place of Birth:|Longitude:|Latitude:|Time Zone:|Information Source:|$)", section, re.S)
         if not m: raise ValueError(f"missing {label}")
         return m.group(1).strip()
     name = section_field("Name")
