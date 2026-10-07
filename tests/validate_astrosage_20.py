@@ -248,10 +248,14 @@ def main():
             moon=body["Planets"]["Moon"]
             if c["moon_sign"] and moon.get("sign") != c["moon_sign"]:
                 failures.append(f"Moon sign {moon.get('sign')} != {c['moon_sign']}")
-            if c["moon_nakshatra"] and moon.get("nakshatra") != c["moon_nakshatra"]:
-                failures.append(f"Moon nak {moon.get('nakshatra')} != {c['moon_nakshatra']}")
-            if c["moon_pada"] and str(moon.get("pada")) != str(c["moon_pada"]):
-                failures.append(f"Moon pada {moon.get('pada')} != {c['moon_pada']}")
+            # The API intentionally exposes Moon longitude/sign, not separate
+            # nakshatra/pada fields. Derive both sides from longitude so the
+            # semantic comparison is independent of response-field naming.
+            api_nak, api_pada = nakshatra_pada(moon["longitude"])
+            if c["moon_nakshatra"] and api_nak != c["moon_nakshatra"]:
+                failures.append(f"Moon nak {api_nak} != {c['moon_nakshatra']}")
+            if c["moon_pada"] and str(api_pada) != str(c["moon_pada"]):
+                failures.append(f"Moon pada {api_pada} != {c['moon_pada']}")
             if failures:
                 failed += 1
                 print(f"[{i:02d}/20] FAIL {c['name']}: " + "; ".join(failures))
