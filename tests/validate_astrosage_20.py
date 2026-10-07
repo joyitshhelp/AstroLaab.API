@@ -85,9 +85,12 @@ def parse_page(url):
     text = soup.get_text("\n", strip=True)
 
     # Use the explicit birth-data section, not the earlier search/filter controls.
-    birth_marker = "## " + name_hint_from_url(url) + "'s Birth Chart / Kundali"
-    start = text.find("Name:", text.find("## " + name_hint_from_url(url)))
-    section = text[start:] if start >= 0 else text
+    # Do not depend on exact celebrity spelling in the heading.
+    marker_pos = text.find("Birth Chart / Kundali")
+    start = text.find("Name:", marker_pos if marker_pos >= 0 else 0)
+    if start < 0:
+        raise ValueError("birth-data section not found")
+    section = text[start:]
     def section_field(label):
         m = re.search(rf"{re.escape(label)}:\\s*(.*?)\\s*(?=Date of Birth:|Time of Birth:|Place of Birth:|Longitude:|Latitude:|Time Zone:|Information Source:|$)", section, re.S)
         if not m: raise ValueError(f"missing {label}")
@@ -116,7 +119,11 @@ def parse_page(url):
         key = cells[0].strip()
         if key in ("Asc", *PLANETS.keys()):
             try:
-                expected[key] = dms(cells[3])
+                sign = cells[3].strip()
+                # AstroSage prints longitude within the Rashi; convert it to
+                # absolute 0..360 longitude before comparing to the API.
+                sign_index = SIGNS.index(sign)
+                expected[key] = sign_index * 30.0 + dms(cells[4])
             except Exception:
                 pass
 
@@ -124,7 +131,7 @@ def parse_page(url):
     if "Moon" in expected:
         for tr in rows:
             cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th","td"])]
-            if len(cells) >= 6 and cells[0].strip() == "Moon":
+            if len(cells) >= 7 and cells[0].strip() == "Moon":
                 moon_sign, moon_nak, moon_pada = cells[3], cells[5], cells[6]
                 break
 
