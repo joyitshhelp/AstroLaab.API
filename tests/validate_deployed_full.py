@@ -300,14 +300,14 @@ def validate_case(case: dict, body: dict, ref: dict) -> tuple[list[str], dict[st
             if bool(float(speed) < 0) != retro:
                 failures.append(f"{name}: retrograde flag inconsistent with speed")
 
-        sign_index = int(ref["expected"][name] // 30.0)
-        expected_sign = SIGNS[sign_index]
+        actual_sign_index = int(float(actual) // 30.0)
+        expected_sign = SIGNS[int(ref["expected"][name] // 30.0)]
         if p.get("sign") != expected_sign:
             failures.append(f"{name}: sign={p.get('sign')!r}, expected {expected_sign!r}")
 
         degree = p.get("degree")
-        expected_degree = ref["expected"][name] - sign_index * 30.0
-        if not isinstance(degree, (int, float)) or abs(float(degree) - expected_degree) * 3600 > 0.1:
+        actual_degree = float(actual) - actual_sign_index * 30.0
+        if not isinstance(degree, (int, float)) or abs(float(degree) - actual_degree) * 3600 > 0.1:
             failures.append(f"{name}: degree inconsistent with longitude")
 
     rahu = planets.get("Rahu")
