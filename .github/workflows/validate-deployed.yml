@@ -1,0 +1,26 @@
+name: Validate deployed API
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deployed-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validator dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate deployed 128-case oracle
+        env:
+          ASTROLAAB_API_URL: ${{ secrets.ASTROLAAB_API_URL }}
+          ASTROLAAB_API_KEY: ${{ secrets.ASTROLAAB_API_KEY }}
+          ASTROLAAB_MIN_INTERVAL: "3.2"
+          ASTROLAAB_RETRIES: "3"
+        run: python tests/validate_deployed_full.py
