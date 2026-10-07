@@ -180,8 +180,6 @@ def parse_page(url):
         raise ValueError("AstroSage planetary table header not found")
     if "Moon" not in expected:
         raise ValueError("AstroSage Moon row not parsed")
-    if not moon_nak or not moon_pada:
-        raise ValueError("AstroSage Moon Nakshatra/Pada not parsed")
 
     return {
         "url": url, "name": name, "date": f"{year:04d}-{month:02d}-{day:02d}",
@@ -254,6 +252,8 @@ def main():
                 failures.append(f"Moon sign {moon.get('sign')} != {c['moon_sign']}")
             if c["moon_nakshatra"] and moon.get("nakshatra") != c["moon_nakshatra"]:
                 failures.append(f"Moon nak {moon.get('nakshatra')} != {c['moon_nakshatra']}")
+            if c["moon_pada"] and str(moon.get("pada")) != str(c["moon_pada"]):
+                failures.append(f"Moon pada {moon.get('pada')} != {c['moon_pada']}")
             if failures:
                 failed += 1
                 print(f"[{i:02d}/20] FAIL {c['name']}: " + "; ".join(failures))
