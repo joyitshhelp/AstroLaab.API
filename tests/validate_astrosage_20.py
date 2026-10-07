@@ -111,29 +111,54 @@ def parse_page(url):
     if not mt: raise ValueError(f"bad time {tob}")
     hour, minute, second = int(mt.group(1)), int(mt.group(2)), int(mt.group(3) or 0)
 
+    # Parse the planetary table by its actual header names. AstroSage's
+    # rendered table is:
+    # Planets | C | R | Rashi | Longitude | Nakshatra | Pada | Relation
     expected = {}
-    rows = soup.find_all("tr")
-    for tr in rows:
-        cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th","td"])]
-        if len(cells) < 5: continue
-        key = cells[0].strip()
-        if key in ("Asc", *PLANETS.keys()):
-            try:
-                sign = cells[3].strip()
-                # AstroSage prints longitude within the Rashi; convert it to
-                # absolute 0..360 longitude before comparing to the API.
-                sign_index = SIGNS.index(sign)
-                expected[key] = sign_index * 30.0 + dms(cells[4])
-            except Exception:
-                pass
-
     moon_sign = moon_nak = moon_pada = None
-    if "Moon" in expected:
-        for tr in rows:
-            cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th","td"])]
-            if len(cells) >= 7 and cells[0].strip() == "Moon":
-                moon_sign, moon_nak, moon_pada = cells[3], cells[5], cells[6]
+    rows = soup.find_all("tr")
+    planet_table_found = False
+
+    for tr in rows:
+        cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
+        normalized = [re.sub(r"\\s+", " ", x).strip().lower() for x in cells]
+
+        if not planet_table_found:
+            if "planets" in normalized and "rashi" in normalized and "longitude" in normalized and "nakshatra" in normalized and "pada" in normalized:
+                planet_table_found = True
+            continue
+
+        if not cells:
+            continue
+
+        key = cells[0].strip()
+        if key not in ("Asc", *PLANETS.keys()):
+            # End of the planetary table.
+            if expected:
                 break
+            continue
+
+        try:
+            # Header-derived indexes, rather than fixed cell positions.
+            idx = {name: normalized.index(name) for name in ("rashi", "longitude", "nakshatra", "pada")}
+            sign = cells[idx["rashi"]].strip()
+            sign = {"Scorpion": "Scorpio"}.get(sign, sign)
+            sign_index = SIGNS.index(sign)
+            expected[key] = sign_index * 30.0 + dms(cells[idx["longitude"]])
+
+            if key == "Moon":
+                moon_sign = sign
+                moon_nak = cells[idx["nakshatra"]].strip() or None
+                moon_pada = cells[idx["pada"]].strip() or None
+        except (ValueError, IndexError, KeyError):
+            continue
+
+    if not planet_table_found:
+        raise ValueError("AstroSage planetary table header not found")
+    if "Moon" not in expected:
+        raise ValueError("AstroSage Moon row not parsed")
+    if not moon_nak or not moon_pada:
+        raise ValueError("AstroSage Moon Nakshatra/Pada not parsed")
 
     return {
         "url": url, "name": name, "date": f"{year:04d}-{month:02d}-{day:02d}",
