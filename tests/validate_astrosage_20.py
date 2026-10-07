@@ -74,19 +74,31 @@ def field(text, label, next_label=None):
         raise ValueError(f"missing {label}")
     return m.group(1).strip()
 
+def name_hint_from_url(url):
+    slug = url.rsplit("/",1)[-1].replace("-birth-chart.asp","")
+    return slug.replace("-", " ").title()
+
 def parse_page(url):
     r = requests.get(url, timeout=30, headers={"User-Agent":"AstroLaab external validation/1.0"})
     r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
     text = soup.get_text("\n", strip=True)
 
-    name = field(text, "Name")
-    dob = field(text, "Date of Birth")
-    tob = field(text, "Time of Birth")
-    place = field(text, "Place of Birth")
-    lon_s = field(text, "Longitude")
-    lat_s = field(text, "Latitude")
-    tz_s = field(text, "Time Zone")
+    # Use the explicit birth-data section, not the earlier search/filter controls.
+    birth_marker = "## " + name_hint_from_url(url) + "'s Birth Chart / Kundali"
+    start = text.find("Name:", text.find("## " + name_hint_from_url(url)))
+    section = text[start:] if start >= 0 else text
+    def section_field(label):
+        m = re.search(rf"{re.escape(label)}:\\s*(.*?)\\s*(?=Date of Birth:|Time of Birth:|Place of Birth:|Longitude:|Latitude:|Time Zone:|Information Source:|$)", section, re.S)
+        if not m: raise ValueError(f"missing {label}")
+        return m.group(1).strip()
+    name = section_field("Name")
+    dob = section_field("Date of Birth")
+    tob = section_field("Time of Birth")
+    place = section_field("Place of Birth")
+    lon_s = section_field("Longitude")
+    lat_s = section_field("Latitude")
+    tz_s = section_field("Time Zone")
 
     md = re.search(r"([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{4})", dob)
     if not md: raise ValueError(f"bad date {dob}")
